@@ -68,7 +68,7 @@ pipeline {
                             "files": [
                                     {
                                         "pattern": "target/*.war",
-                                        "target": "example-repo-local/ashok/"
+                                        "target": "example-repo-local/vinod/"
                                     }
                                 ]
                             }"""
