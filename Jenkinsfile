@@ -21,5 +21,23 @@ pipeline {
             }
          }
       }
+      stage("Code Analysis"){
+         environment {
+            def sonarHome = tool name: 'sonarscanner-4.7'
+         }
+         steps {  
+               withSonarQubeEnv('mysonarserver') {
+                  sh "${sonarHome}/bin/sonar-scanner -Dproject.settings=./myjavaapp.properties" 
+               }
+               sleep time: 30000, unit: 'MILLISECONDS'
+               script {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+               }
+
+         }
+      }
    }
 }
