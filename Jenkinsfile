@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL = 'http://54.172.33.250:9000/'
+        SONAR_HOST_URL = 'http://18.209.9.215:9000/'
+        ARTIFACTORY_URL = 'http://34.224.212.134:8081/artifactory' // Change this
+        ARTIFACTORY_REPO = 'libs-release-local' // Change if required
     }
 
     stages {
@@ -11,6 +13,7 @@ pipeline {
                 sh 'mvn clean install'
             }
         }
+
         stage('Run Unit Tests') {
             steps {
                 sh 'mvn test'
@@ -19,10 +22,10 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube') { // Name configured in Jenkins
+                withSonarQubeEnv('sonarqube') {
                     withCredentials([string(credentialsId: 'sonar-jenkins-token', variable: 'SONAR_TOKEN')]) {
                         sh """
-                            mvn sonar:sonar \
+                        mvn sonar:sonar \
                             -Dsonar.projectKey=reports \
                             -Dsonar.projectName=reports \
                             -Dsonar.host.url=$SONAR_HOST_URL \
@@ -42,6 +45,26 @@ pipeline {
             }
         }
 
+        stage('Upload Artifact to JFrog') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'jfrog-creds',
+                    usernameVariable: 'JFROG_USER',
+                    passwordVariable: 'JFROG_PASS'
+                )]) {
+                    sh '''
+                        WAR_PATH=$(find target -name "*.war" | head -n 1)
+                        FILE_NAME=$(basename $WAR_PATH)
+                        echo "Uploading to JFrog: $FILE_NAME"
+
+                        curl -u $JFROG_USER:$JFROG_PASS \
+                        -T $WAR_PATH \
+                        "$ARTIFACTORY_URL/$ARTIFACTORY_REPO/$FILE_NAME"
+                    '''
+                }
+            }
+        }
+
         stage('Deploy to Tomcat Manager') {
             steps {
                 withCredentials([usernamePassword(
@@ -54,7 +77,7 @@ pipeline {
                         echo "Deploying WAR: $WAR_PATH"
                         curl -u $TOMCAT_USER:$TOMCAT_PASS \
                         -T $WAR_PATH \
-                        "http://100.27.191.247:8080/manager/text/deploy?path=/Rest-API&update=true"
+                        "http://54.227.69.190:8080/manager/text/deploy?path=/Rest-API&update=true"
                     '''
                 }
             }
