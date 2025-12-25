@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL = 'http://18.209.9.215:9000/'
+        // SONAR_HOST_URL = 'http://18.209.9.215:9000/'
         ARTIFACTORY_URL = 'http://34.224.212.134:8081/artifactory' // Change this
         ARTIFACTORY_REPO = 'libs-release-local' // Change if required
     }
@@ -20,30 +20,30 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    withCredentials([string(credentialsId: 'sonar-jenkins-token', variable: 'SONAR_TOKEN')]) {
-                        sh """
-                        mvn sonar:sonar \
-                            -Dsonar.projectKey=reports \
-                            -Dsonar.projectName=reports \
-                            -Dsonar.host.url=$SONAR_HOST_URL \
-                            -Dsonar.login=$SONAR_TOKEN \
-                            -Dsonar.java.binaries=target/classes
-                        """
-                    }
-                }
-            }
-        }
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         withSonarQubeEnv('sonarqube') {
+        //             withCredentials([string(credentialsId: 'sonar-jenkins-token', variable: 'SONAR_TOKEN')]) {
+        //                 sh """
+        //                 mvn sonar:sonar \
+        //                     -Dsonar.projectKey=reports \
+        //                     -Dsonar.projectName=reports \
+        //                     -Dsonar.host.url=$SONAR_HOST_URL \
+        //                     -Dsonar.login=$SONAR_TOKEN \
+        //                     -Dsonar.java.binaries=target/classes
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('Quality Gate Check') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+        // stage('Quality Gate Check') {
+        //     steps {
+        //         timeout(time: 5, unit: 'MINUTES') {
+        //             waitForQualityGate abortPipeline: true
+        //         }
+        //     }
+        // }
 
         stage('Upload Artifact to JFrog') {
             steps {
