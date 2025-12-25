@@ -1,16 +1,44 @@
 pipeline {
     agent any
 
+    environment {
+        SONAR_HOST_URL = 'http://54.172.33.250:9000/'
+    }
+
     stages {
-        stage('Build Code') {
+        stage('Build') {
             steps {
                 sh 'mvn clean install'
             }
         }
-
-        stage('Test Code') {
+        stage('Run Unit Tests') {
             steps {
                 sh 'mvn test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') { // Name configured in Jenkins
+                    withCredentials([string(credentialsId: 'sonar-jenkins-token', variable: 'SONAR_TOKEN')]) {
+                        sh """
+                            mvn sonar:sonar \
+                            -Dsonar.projectKey=reports \
+                            -Dsonar.projectName=reports \
+                            -Dsonar.host.url=$SONAR_HOST_URL \
+                            -Dsonar.login=$SONAR_TOKEN \
+                            -Dsonar.java.binaries=target/classes
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate Check') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
 
@@ -22,9 +50,11 @@ pipeline {
                     passwordVariable: 'TOMCAT_PASS'
                 )]) {
                     sh '''
+                        WAR_PATH=$(find target -name "*.war" | head -n 1)
+                        echo "Deploying WAR: $WAR_PATH"
                         curl -u $TOMCAT_USER:$TOMCAT_PASS \
-                        -T /var/lib/jenkins/.m2/repository/koddas/web/war/wwp/1.0.0/wwp-1.0.0.war \
-                        "http://3.92.4.131:8080/manager/text/deploy?path=/Rest-API&update=true"
+                        -T $WAR_PATH \
+                        "http://100.27.191.247:8080/manager/text/deploy?path=/Rest-API&update=true"
                     '''
                 }
             }
