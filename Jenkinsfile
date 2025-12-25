@@ -19,7 +19,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Name configured in Jenkins
+                withSonarQubeEnv('sonarqube') { // Name configured in Jenkins
                     withCredentials([string(credentialsId: 'sonar-jenkins-token', variable: 'SONAR_TOKEN')]) {
                         sh """
                             mvn sonar:sonar \
