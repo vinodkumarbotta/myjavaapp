@@ -3,11 +3,12 @@ pipeline {
 
     environment {
         // SONAR_HOST_URL = 'http://18.209.9.215:9000/'
-        ARTIFACTORY_URL = 'http://34.224.212.134:8081/artifactory' // Change this
-        ARTIFACTORY_REPO = 'libs-release-local' // Change if required
+        ARTIFACTORY_URL = 'http://34.224.212.134:8081/artifactory'
+        ARTIFACTORY_REPO = 'libs-release-local'
     }
 
     stages {
+
         stage('Build') {
             steps {
                 sh 'mvn clean install'
@@ -47,18 +48,17 @@ pipeline {
 
         stage('Upload Artifact to JFrog') {
             steps {
-                withCredentials([usernamePassword(
+                withCredentials([string(
                     credentialsId: 'jfrog-creds',
-                    usernameVariable: 'JFROG_USER',
-                    passwordVariable: 'JFROG_PASS'
+                    variable: 'JFROG_TOKEN'
                 )]) {
                     sh '''
                         WAR_PATH=$(find target -name "*.war" | head -n 1)
                         FILE_NAME=$(basename $WAR_PATH)
                         echo "Uploading to JFrog: $FILE_NAME"
 
-                        curl -u $JFROG_USER:$JFROG_PASS \
-                        -T $WAR_PATH \
+                        curl -H "X-JFrog-Art-Api:$JFROG_TOKEN" \
+                        -T "$WAR_PATH" \
                         "$ARTIFACTORY_URL/$ARTIFACTORY_REPO/$FILE_NAME"
                     '''
                 }
@@ -75,8 +75,9 @@ pipeline {
                     sh '''
                         WAR_PATH=$(find target -name "*.war" | head -n 1)
                         echo "Deploying WAR: $WAR_PATH"
-                        curl -u $TOMCAT_USER:$TOMCAT_PASS \
-                        -T $WAR_PATH \
+
+                        curl -u "$TOMCAT_USER:$TOMCAT_PASS" \
+                        -T "$WAR_PATH" \
                         "http://54.227.69.190:8080/manager/text/deploy?path=/Rest-API&update=true"
                     '''
                 }
