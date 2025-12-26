@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // SONAR_HOST_URL = 'http://18.209.9.215:9000/'
-        ARTIFACTORY_URL = 'http://34.224.212.134:8081/artifactory'
+        ARTIFACTORY_URL = 'http://100.31.94.19:8081//artifactory'
         ARTIFACTORY_REPO = 'libs-release-local'
     }
 
