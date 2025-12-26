@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // SONAR_HOST_URL = 'http://18.209.9.215:9000/'
-        ARTIFACTORY_URL = 'http://100.31.94.19:8081//artifactory'
+        ARTIFACTORY_URL = 'http://100.31.94.19:8081/artifactory'
         ARTIFACTORY_REPO = 'libs-release-local'
+        // SONAR_HOST_URL = 'http://18.209.9.215:9000/'
     }
 
     stages {
@@ -48,18 +48,21 @@ pipeline {
 
         stage('Upload Artifact to JFrog') {
             steps {
-                withCredentials([string(
-                    credentialsId: 'jfrog-creds',
-                    variable: 'JFROG_TOKEN'
-                )]) {
+                withCredentials([string(credentialsId: 'jfrog-creds', variable: 'JFROG_TOKEN')]) {
                     sh '''
                         WAR_PATH=$(find target -name "*.war" | head -n 1)
-                        FILE_NAME=$(basename $WAR_PATH)
+                        FILE_NAME=$(basename "$WAR_PATH")
+                        VERSION=$(grep -m1 "<version>" pom.xml | sed -e "s/.*<version>\\(.*\\)<\\/version>.*/\\1/")
+
+                        GROUP_PATH="koddas/web/war/wwp/$VERSION"
+
                         echo "Uploading to JFrog: $FILE_NAME"
+                        echo "Version: $VERSION"
+                        echo "Repo Path: $GROUP_PATH"
 
                         curl -H "X-JFrog-Art-Api:$JFROG_TOKEN" \
                         -T "$WAR_PATH" \
-                        "$ARTIFACTORY_URL/$ARTIFACTORY_REPO/$FILE_NAME"
+                        "$ARTIFACTORY_URL/$ARTIFACTORY_REPO/$GROUP_PATH/$FILE_NAME"
                     '''
                 }
             }
