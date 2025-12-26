@@ -78,7 +78,7 @@ pipeline {
 
                         curl -u "$TOMCAT_USER:$TOMCAT_PASS" \
                         -T "$WAR_PATH" \
-                        "http://54.227.69.190:8080/manager/text/deploy?path=/Rest-API&update=true"
+                        "http://52.3.183.141:8080/manager/text/deploy?path=/Rest-API&update=true"
                     '''
                 }
             }
