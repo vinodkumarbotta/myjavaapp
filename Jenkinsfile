@@ -8,7 +8,7 @@ pipeline {
     }
 
     environment {
-        ARTIFACTORY_URL = 'http://100.31.94.19:8081/artifactory'
+        ARTIFACTORY_URL = 'http://13.220.254.243:8081/artifactory'
         ARTIFACTORY_REPO = 'libs-release-local'
     }
 
